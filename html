@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Time Tracker & Stopwatch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            900: '#052e16',
+                            accent: '#3b82f6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Glassmorphism & custom glowing effects */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .light .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .glow-green {
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.35);
+        }
+        .glow-red {
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.35);
+        }
+        .glow-blue {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.35);
+        }
+        /* Hide scrollbars for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased transition-colors duration-300 light:bg-slate-50 light:text-slate-900">
+
+    <div id="app" class="max-w-5xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col min-h-screen">
+        
+        <!-- Header Controls -->
+        <header class="flex items-center justify-between pb-6 border-b border-slate-800 light:border-slate-200">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white light:text-slate-900">ChronoPrecision</h1>
+                    <p class="text-xs text-slate-400">High-Performance Precision Stopwatch</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Mode Selector -->
+                <div class="bg-slate-900 light:bg-slate-200 p-1 rounded-xl flex text-xs font-medium border border-slate-800 light:border-slate-300">
+                    <button id="mode-stopwatch-btn" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-semibold transition-all">Stopwatch</button>
+                    <button id="mode-timer-btn" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all">Timer</button>
+                </div>
+
+                <!-- Audio Toggle -->
+                <button id="audio-toggle" title="Toggle Beep Audio" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 light:bg-slate-100 light:border-slate-300 light:text-slate-600 transition">
+                    <svg id="sound-on-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    </svg>
+                    <svg id="sound-off-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                    </svg>
+                </button>
+
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" title="Toggle Theme" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 light:bg-slate-100 light:border-slate-300 light:text-slate-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                </button>
+
+                <!-- Shortcuts Modal Button -->
+                <button id="shortcuts-btn" title="Keyboard Shortcuts" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 light:bg-slate-100 light:border-slate-300 light:text-slate-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 my-8 flex flex-col items-center justify-center">
+            
+            <!-- Stopwatch Outer Dial Frame -->
+            <div class="relative flex items-center justify-center my-6">
+                <!-- SVG Progress Ring -->
+                <svg class="w-72 h-72 sm:w-96 sm:h-96 -rotate-90 transform">
+                    <circle cx="50%" cy="50%" r="44%" class="stroke-slate-900 light:stroke-slate-200 fill-none" stroke-width="8" />
+                    <circle id="progress-ring" cx="50%" cy="50%" r="44%" class="stroke-emerald-500 fill-none transition-all duration-75" stroke-width="8" stroke-dasharray="1100" stroke-dashoffset="1100" stroke-linecap="round" />
+                </svg>
+
+                <!-- Inner Timer Content -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <!-- Status Badge -->
+                    <div id="status-badge" class="mb-3 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-slate-900 text-slate-400 border border-slate-800">
+                        READY
+                    </div>
+
+                    <!-- Time Display -->
+                    <div id="time-display" class="font-mono text-4xl sm:text-6xl font-bold tracking-tight text-white light:text-slate-900 my-1 drop-shadow-md">
+                        00:00:00<span class="text-emerald-400 text-2xl sm:text-4xl">.00</span>
+                    </div>
+
+                    <!-- Split / Lap Sub-timer -->
+                    <div id="sub-time-display" class="font-mono text-sm sm:text-base text-slate-400 mt-1">
+                        Lap: 00:00.00
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4 sm:space-x-6 mt-4">
+                <!-- Secondary / Lap Button -->
+                <button id="lap-btn" disabled class="w-28 sm:w-32 py-3 px-4 rounded-xl font-medium text-sm transition-all bg-slate-900 text-slate-500 border border-slate-800 cursor-not-allowed flex items-center justify-center space-x-2 hover:border-slate-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                    </svg>
+                    <span id="lap-btn-text">Lap</span>
+                </button>
+
+                <!-- Main Start / Pause Button -->
+                <button id="start-btn" class="w-36 sm:w-44 py-4 px-6 rounded-2xl font-semibold text-base transition-all bg-emerald-500 hover:bg-emerald-400 text-slate-950 glow-green flex items-center justify-center space-x-2 transform active:scale-95">
+                    <svg id="start-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg id="pause-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5 0a1 1 0 012 0v4a1 1 0 11-2 0V8z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span id="start-btn-text">Start</span>
+                </button>
+
+                <!-- Reset Button -->
+                <button id="reset-btn" disabled class="w-28 sm:w-32 py-3 px-4 rounded-xl font-medium text-sm transition-all bg-slate-900 text-slate-500 border border-slate-800 cursor-not-allowed flex items-center justify-center space-x-2 hover:border-slate-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Reset</span>
+                </button>
+            </div>
+
+            <div id="stats-dashboard" class="w-full grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10 hidden">
+                <div class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center text-center">
+                    <span class="text-xs text-slate-400 font-medium">Total Laps</span>
+                    <span id="stat-total-laps" class="text-xl sm:text-2xl font-bold font-mono text-white light:text-slate-900 mt-1">0</span>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center text-center border-emerald-500/30">
+                    <span class="text-xs text-emerald-400 font-medium">Fastest Lap</span>
+                    <span id="stat-fastest-lap" class="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">--:--.--</span>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center text-center">
+                    <span class="text-xs text-slate-400 font-medium">Average Lap</span>
+                    <span id="stat-avg-lap" class="text-xl sm:text-2xl font-bold font-mono text-blue-400 mt-1">--:--.--</span>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center text-center border-red-500/30">
+                    <span class="text-xs text-red-400 font-medium">Slowest Lap</span>
+                    <span id="stat-slowest-lap" class="text-xl sm:text-2xl font-bold font-mono text-red-400 mt-1">--:--.--</span>
+                </div>
+            </div>
+
+            <!-- Canvas Bar Chart Visualizer -->
+            <div id="chart-container" class="w-full glass-panel p-4 rounded-2xl mt-4 hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lap Distribution Analysis</span>
+                    <span class="text-xs text-slate-500">Visual comparison</span>
+                </div>
+                <canvas id="lap-chart" class="w-full h-24"></canvas>
+            </div>
+
+            <div id="lap-section" class="w-full glass-panel rounded-2xl mt-6 overflow-hidden hidden">
+                <div class="p-4 border-b border-slate-800 light:border-slate-200 flex items-center justify-between flex-wrap gap-2">
+                    <h3 class="text-sm font-semibold text-slate-200 light:text-slate-800 flex items-center gap-2">
+                        <span>Lap History</span>
+                        <span id="lap-count-badge" class="px-2 py-0.5 text-xs bg-slate-800 text-slate-300 rounded-full">0</span>
+                    </h3>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button id="export-csv-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center space-x-1.5 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span>CSV</span>
+                        </button>
+                        <button id="export-json-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center space-x-1.5 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>JSON</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="max-h-64 overflow-y-auto no-scrollbar">
+                    <table class="w-full text-left text-sm font-mono">
+                        <thead class="bg-slate-900/50 light:bg-slate-100 text-slate-400 text-xs uppercase tracking-wider sticky top-0 backdrop-blur-md">
+                            <tr>
+                                <th class="px-6 py-3">Lap</th>
+                                <th class="px-6 py-3">Lap Time</th>
+                                <th class="px-6 py-3">Total Split</th>
+                                <th class="px-6 py-3 text-right">Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lap-table-body" class="divide-y divide-slate-800/50 light:divide-slate-200">
+                            <!-- Dynamic Lap Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="pt-6 border-t border-slate-800 light:border-slate-200 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>ChronoPrecision &copy; 2026 Open Source Project</div>
+            <div class="flex items-center space-x-4">
+                <span>Press <kbd class="px-1.5 py-0.5 bg-slate-800 text-slate-300 rounded border border-slate-700">Space</kbd> Start/Pause</span>
+                <span><kbd class="px-1.5 py-0.5 bg-slate-800 text-slate-300 rounded border border-slate-700">L</kbd> Lap</span>
+                <span><kbd class="px-1.5 py-0.5 bg-slate-800 text-slate-300 rounded border border-slate-700">R</kbd> Reset</span>
+            </div>
+        </footer>
+    </div>
+
+    <div id="shortcuts-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="glass-panel p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl border border-slate-700">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-white">Keyboard Shortcuts</h3>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="py-4 space-y-3">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-slate-300">Start / Pause Timer</span>
+                    <kbd class="px-2 py-1 bg-slate-800 text-emerald-400 rounded border border-slate-700 font-mono text-xs">Space</kbd>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-slate-300">Record Lap / Split</span>
+                    <kbd class="px-2 py-1 bg-slate-800 text-emerald-400 rounded border border-slate-700 font-mono text-xs">L</kbd>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-slate-300">Reset Timer</span>
+                    <kbd class="px-2 py-1 bg-slate-800 text-emerald-400 rounded border border-slate-700 font-mono text-xs">R</kbd>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-slate-300">Toggle Sound</span>
+                    <kbd class="px-2 py-1 bg-slate-800 text-emerald-400 rounded border border-slate-700 font-mono text-xs">M</kbd>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ChronoPrecision Stopwatch Engine
+         * Built using requestAnimationFrame & performance.now() for maximum drift-free accuracy.
+         */
+        class StopwatchApp {
+            constructor() {
+                // State variables
+                this.isRunning = false;
+                this.startTime = 0;
+                this.elapsedTime = 0;
+                this.lapStartTime = 0;
+                this.lapElapsedTime = 0;
+                this.laps = [];
+                this.animationFrameId = null;
+                this.audioEnabled = true;
+
+                // Web Audio API Context
+                this.audioCtx = null;
+
+                // DOM Cache
+                this.timeDisplay = document.getElementById('time-display');
+                this.subTimeDisplay = document.getElementById('sub-time-display');
+                this.statusBadge = document.getElementById('status-badge');
+                this.progressRing = document.getElementById('progress-ring');
+                
+                this.startBtn = document.getElementById('start-btn');
+                this.startBtnText = document.getElementById('start-btn-text');
+                this.startIcon = document.getElementById('start-icon');
+                this.pauseIcon = document.g
